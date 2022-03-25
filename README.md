@@ -1,7 +1,7 @@
 
 # BashDumpsterDiver
 
-This little bash script is intended to scan a set of files for secrets (e.g. Hashes, Passwords, etc.) by means of an entropy analysis of the files' contents. It was inspired by the Python project XXX and provides a similar functionality. It was inspired by the Python project XXX and offers similar functionality but more flexibility as it is written in Bash.
+This little bash script is intended to scan a set of files for secrets (e.g. Hashes, Passwords, etc.) by means of an entropy analysis of the files' contents. It was inspired by the Python project [DumpsterDiver](https://github.com/securing/DumpsterDiver) by securing and offers similar functionality but more flexibility as it is written in Bash.
 
 
 ## Usage
