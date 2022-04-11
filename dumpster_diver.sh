@@ -1,18 +1,7 @@
 #!/bin/bash
 
 
-#
-# Config parameters
-#
-MIN_KEY_SIZE=12;
-MAX_KEY_SIZE=80;
-HIGH_ENTROPY_THRES="4.00";
-EXCLUDED_FILES="jpg jpeg png gif svg mp4 mp3 webm ttf woff eot css DS_Store pdf"
 PRINTABLE_CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyzäöüß0123456789+/=[]{}()?§$&%_-<>|!#':;"
-VERBOSE="0";
-IGNORE_BINARIES="1";
-TARGET_DIR="/"
-
 
 #
 # helper function for dividing integers
@@ -234,16 +223,6 @@ function found_high_entropy () {
 
 
 #
-# Recursivly collects all files in a given directory and ignores all excluded types
-# Arguments: file path
-#
-function collect_all_files () {
-	local retval=$(find "$1" -type f $(printf "! -name *.%s " $(echo "$EXCLUDED_FILES")) 2>/dev/null);
-	echo "$retval";
-}
-
-
-#
 # Analyzes a given file for secrets.
 #
 function analyze_file () {
@@ -274,17 +253,17 @@ function analyze_file () {
 
 	local total=${#b64_strs[*]};
 
-	if [[ "$VERBOSE" == "1" && "$found" == "1" ]]; then
-		echo "Current File: $1"
+	if [[ "$EXT_VERBOSE" == "1" && "$found" == "1" ]]; then
+		echo "[INFO THREAD $THREAD_NUMBER] Current File: $1" >&2
 	fi
 
 	local c=0;
 
 	for word in ${b64_strs[*]}; do
 		
-		if [[ "$VERBOSE" == "1" ]]; then
+		if [[ "$EXT_VERBOSE" == "1" ]]; then
 			let c++;
-			echo "$c of $total detected strings checked for secrets..."
+			echo "[INFO THREAD $THREAD_NUMBER] $c of $total detected strings checked for secrets..." >&2
 		fi
 		
 		found_high_entropy "$1" "$word" "$HIGH_ENTROPY_THRES"
@@ -297,11 +276,20 @@ function analyze_file () {
 #
 function start_analysis () {
 
-	local files=$(collect_all_files "$1");
+	local files=$(cat -);
+	local total=$(echo "$files" | wc -l);
 	local o=$IFS;
 	IFS=$(echo -en "\n\b");
 
+	local counter=1;
+
 	for file in $files; do
+
+		if [ "$VERBOSE" == "1" ] || [ "$EXT_VERBOSE" == "1" ]; then
+			echo "[INFO THREAD $THREAD_NUMBER] $counter from $total files processed" >&2
+		fi
+
+		let counter++;
 		analyze_file "$file";
 	done
 
@@ -309,47 +297,23 @@ function start_analysis () {
 }
 
 
-#
-# Prints the usage message.
-#
-function usage () {
-	readonly PROGNAME=`basename $0`
 
-	echo """usage: ./$PROGNAME [-h] [-v] [-b] [-d <path>] [-l <number>] [-m <number>] [-t <number>] 
-
-Switches:
-	
--h 
-	Prints the help message
--b
-	By specifying this switch, binaries are also scanned when searching for secrets. (Default: disabled)
--d <path>
-	Specifies the starting path at which the recursive search is started. (Default: \"/\")
--l <integer>
-	Minimum length of the strings to be considered for the entropy calculation. (Default: 12)
--m <integer>
-	Maximum length of the strings to be considered for the entropy calculation. (Default: 80)
--t <float>
-	Specifies the entropy threshold above which strings are recognized as secrets. (Default: 4.0)
-	
-	"""
-}
 
 
 #
 # Argument Parsing and startpoint of the analysis
 #
-while getopts vhbd:l:m:t: option
+while getopts vehbd:l:m:t:n: option
 do 
     case "${option}"
         in
-        d)TARGET_DIR_TEMP=${OPTARG};;
         l)MIN_KEY_SIZE_TEMP=${OPTARG};;
 		m)MAX_KEY_SIZE_TEMP=${OPTARG};;
 		t)ENTROPY_THRES_TEMP=${OPTARG};;
+		n)THREAD_NUMBER=${OPTARG};;
+		e)EXT_VERBOSE_TEMP="1";;
 		v)VERBOSE_TEMP="1";;
 		b)BINARIES_TEMP="0";;
-		h) usage; exit;;
     esac
 done
 
@@ -370,6 +334,10 @@ if [[ ! -z "$ENTROPY_THRES_TEMP" ]]; then
 	HIGH_ENTROPY_THRES=$ENTROPY_THRES_TEMP;
 fi
 
+if [[ ! -z "$EXT_VERBOSE_TEMP" ]]; then
+	EXT_VERBOSE=$EXT_VERBOSE_TEMP;
+fi 
+
 if [[ ! -z "$VERBOSE_TEMP" ]]; then
 	VERBOSE=$VERBOSE_TEMP;
 fi 
@@ -378,4 +346,4 @@ if [[ ! -z "$BINARIES_TEMP" ]]; then
 	IGNORE_BINARIES=$BINARIES_TEMP;
 fi
 
-start_analysis "$TARGET_DIR";
+start_analysis ;
