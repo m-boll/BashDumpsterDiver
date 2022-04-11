@@ -34,9 +34,9 @@ function start_analysis() {
 
 	for ((i=1; i<=$THREADS; i++)) do
 		echo "Spawning thread $i";
-		filtered_files=$(echo "$files" | awk -v threads=$i 'NR == 1 || NR % threads == 0');
+		filtered_files=$(echo "$files" | awk -v threads=$THREADS 'NR == 1 || NR % threads == 0');
 		
-		echo "$filtered_files" | ./dumpster_diver.sh -l $MIN_KEY_SIZE -m $MAX_KEY_SIZE -t HIGH_ENTROPY_THRES -n $i \
+		echo "$filtered_files" | ./dumpster_diver.sh -l $MIN_KEY_SIZE -m $MAX_KEY_SIZE -t $HIGH_ENTROPY_THRES -n $i \
 			 $( if [ "$IGNORE_BINARIES" == "0" ]; then echo "-b"; fi ) \
 			 $( if [ "$VERBOSE" == "1" ]; then echo "-v"; fi ) \
 			 $( if [ "$EXT_VERBOSE" == "1" ]; then echo "-e"; fi ) > $(realpath "$OUTPUT_DIR/$OUTFILE$i") &
