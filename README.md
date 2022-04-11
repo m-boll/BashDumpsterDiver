@@ -3,9 +3,7 @@
 
 This little bash script is intended to scan a set of files for secrets (e.g. Hashes, Passwords, etc.) by means of an entropy analysis of the files' contents. It was inspired by the Python project [DumpsterDiver](https://github.com/securing/DumpsterDiver) by securing and offers similar functionality but more flexibility in terms of compatibility as it is written in pure Bash. 
 
-The script writes any status messages to stderr. If one of the verbose modes is used it is recommended to run the script in something like a screen session.
-
-As shown below, the analysis is started by executing the start.sh script and interrupted using the stop.sh script.
+The script writes any status messages to stderr. As shown below, the analysis is started by executing the start.sh script and interrupted using the stop.sh script.
 
 
 ## Usage
